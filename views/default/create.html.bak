@@ -1,0 +1,2 @@
+{{extend 'layout.html'}}
+<h1>Crawling and Inserting Successful!</h1>

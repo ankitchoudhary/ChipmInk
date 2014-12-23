@@ -1,0 +1,11 @@
+{{extend 'layout.html'}}
+<h1>This is the default/create.html template</h1>
+{{=form}}
+{{url="http://www.reddit.com/r/funnyvideos/top"}}
+{{import urllib2}}
+{{import re}}
+{{f1=urllib2.urlopen(url).read()}}
+{{for i in f1:}}
+{{=re.findall(r"href="https://www.youtube.com/watch?v=",i)}}
+{{pass}}
+#{{=BEAUTIFY(response._vars)}}

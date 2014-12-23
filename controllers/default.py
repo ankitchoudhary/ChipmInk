@@ -1,0 +1,169 @@
+# -*- coding: utf-8 -*-
+# this file is released under public domain and you can use without limitations
+
+#########################################################################
+## This is a sample controller
+## - index is the default action of any application
+## - user is required for authentication and authorization
+## - download is for downloading files uploaded in the db (does streaming)
+## - api is an example of Hypermedia API support and access control
+#########################################################################
+
+def index():
+    """
+    example action using the internationalization operator T and flash
+    rendered by views/default/index.html or views/generic.html
+
+    if you need a simple wiki simply replace the two lines below with:
+    return auth.wiki()
+    """
+   
+    response.flash = "Welcome to the index view!"
+    videos = db(db.videos).select(orderby=db.videos.rating)
+    return dict(videos=videos)
+
+   # response.flash = T("Welcome to web2py!")
+   # return dict(message=T('Hello World'))
+def create():
+    ''' Generates a form corresponding to the model and
+    renders it, if the form sends some data, the function
+    validates the data and saves the data in the database.'''
+    response.flash = "This is the create page"
+    import urllib2
+    import datetime
+    yesterday = datetime.timedelta(days=1)
+    yy = datetime.datetime.now() - yesterday
+    t = yy.isoformat('T')
+    t = yy.strftime('%Y-%m-%dT%H:%M:%SZ')
+    url="https://www.googleapis.com/youtube/v3/search?part=snippet&q=funny+comedy+entertainment&type=video&videoCaption=closedCaption&maxResults=10&safeSearch=moderate&order=viewCount&key=AIzaSyDUnnGFtZIZlCgBMjuCVxUyNUcxqrhmTzM"
+    f=urllib2.urlopen(url).read()
+    import json
+    d = json.loads(f)
+    for item in d['items']:
+            vid=item['id']['videoId']
+            if db(db.videos.vid==vid).count() == 0:
+                s1="https://www.googleapis.com/youtube/v3/videos?id="+vid+"&key=AIzaSyDUnnGFtZIZlCgBMjuCVxUyNUcxqrhmTzM&part=snippet,contentDetails,statistics,status"
+                f=urllib2.urlopen(s1).read()
+                d = json.loads(f)
+                v=d['items'][0]
+                title=v['snippet']['title']
+                description=v['snippet']['description']
+                tv = int(v['statistics']['viewCount'])
+                tl = int(v['statistics']['likeCount'])
+                td = int(v['statistics']['dislikeCount'])
+                r = float((float(tl) - float(3 * td)) / float(tv) )
+                catId=v['snippet']['categoryId']
+                urlCat="https://www.googleapis.com/youtube/v3/videoCategories?part=snippet&id="+catId+"&key=AIzaSyDUnnGFtZIZlCgBMjuCVxUyNUcxqrhmTzM"
+                f=urllib2.urlopen(urlCat).read()
+                catOutput = json.loads(f)
+                tags = catOutput['items'][0]['snippet']['title']
+                db.videos.insert(sourceOfVideo='youtube',vid=vid,title=title, description=description,total_view=tv,total_likes=tl,total_dislikes=td,rating=r,tags=tags)
+    
+    url="http://www.reddit.com/r/funnyvideos/top"
+    import re
+    f1=urllib2.urlopen(url).read()
+    x=re.findall(r"href=\"https:\/\/www\.youtube\.com\/watch\?v=\w*?\"",f1)
+    x=list(set(x))
+    #count=0
+    #url="";
+    for i in x:
+        i=i[38:]
+        i=i[:-1]
+        vid=i
+        #count=count+1
+        #url=url+"=="+vid+"=="
+        if db(db.videos.vid==vid).count() ==  0:
+            s1="https://www.googleapis.com/youtube/v3/videos?id="+vid+"&key=AIzaSyDUnnGFtZIZlCgBMjuCVxUyNUcxqrhmTzM&part=snippet,contentDetails,statistics,status"
+            f=urllib2.urlopen(s1).read()
+            d = json.loads(f)
+            v=d['items'][0]
+            title=v['snippet']['title']
+            description=v['snippet']['description']
+            tv = int(v['statistics']['viewCount'])
+            tl = int(v['statistics']['likeCount'])
+            td = int(v['statistics']['dislikeCount'])
+            r = float((float(tl) - float(3 * td)) / float(tv) )
+            catId=v['snippet']['categoryId']
+            urlCat="https://www.googleapis.com/youtube/v3/videoCategories?part=snippet&id="+catId+"&key=AIzaSyDUnnGFtZIZlCgBMjuCVxUyNUcxqrhmTzM"
+            f=urllib2.urlopen(urlCat).read()
+            catOutput = json.loads(f)
+            tags = catOutput['items'][0]['snippet']['title']
+            db.videos.insert(sourceOfVideo='youtube',vid=vid,title=title, description=description,total_view=tv,total_likes=tl,total_dislikes=td,rating=r,tags=tags)            
+    form=SQLFORM(db.notes)
+    if form.process().accepted:
+        response.flash = 'form accepted'
+    elif form.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill the form'
+    return dict(form=form,t=t,url=url)
+
+
+
+
+def edit():
+    ''' The function pre-populates the data from the note instance
+    that has been requested to be edited and renders it,
+    once client sends in some data, it saves it in the database.'''
+    note = db.notes(request.args(0)) or redirect(URL('error'))
+    form=SQLFORM(db.notes, note, deletable = True)
+    if form.validate():
+        if form.deleted:
+            db(db.notes.id==note.id).delete()
+            redirect(URL('index'))
+        else:
+            note.update_record(**dict(form.vars))
+            response.flash = 'records changed'
+    else:
+        response.flash = 'Something went wrong!'
+    return dict(form=form)
+    ##changes made by Ankit till here
+
+def user():
+    """
+    exposes:
+    http://..../[app]/default/user/login
+    http://..../[app]/default/user/logout
+    http://..../[app]/default/user/register
+    http://..../[app]/default/user/profile
+    http://..../[app]/default/user/retrieve_password
+    http://..../[app]/default/user/change_password
+    http://..../[app]/default/user/manage_users (requires membership in
+    use @auth.requires_login()
+        @auth.requires_membership('group name')
+        @auth.requires_permission('read','table name',record_id)
+    to decorate functions that need access control
+    """
+    return dict(form=auth())
+
+
+@cache.action()
+def download():
+    """
+    allows downloading of uploaded files
+    http://..../[app]/default/download/[filename]
+    """
+    return response.download(request, db)
+
+
+def call():
+    """
+    exposes services. for example:
+    http://..../[app]/default/call/jsonrpc
+    decorate with @services.jsonrpc the functions to expose
+    supports xml, json, xmlrpc, jsonrpc, amfrpc, rss, csv
+    """
+    return service()
+
+
+@auth.requires_login() 
+def api():
+    """
+    this is example of API with access control
+    WEB2PY provides Hypermedia API (Collection+JSON) Experimental
+    """
+    from gluon.contrib.hypermedia import Collection
+    rules = {
+        '<tablename>': {'GET':{},'POST':{},'PUT':{},'DELETE':{}},
+        }
+    return Collection(db).process(request,response,rules)

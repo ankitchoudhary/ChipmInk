@@ -1,0 +1,43 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <!-- <script src="https://raw.githubusercontent.com/paulirish/infinite-scroll/master/jquery.infinitescroll.min.js" type="text/javascript" charset="utf-8"/> -->
+
+<script src="{{=URL('static','jquery.js')}}"
+        type="text/javascript"></script>
+    
+   <script src="{{=URL('static','blocksit.min.js')}}"
+        type="text/javascript"></script> <script type="text/javascript">
+        console.log('333');
+      //  jQuery.noConflict();
+      $(document).ready(function() {
+	$('#container').BlocksIt({
+		numOfCol: 4,
+		offsetX: 8,
+		offsetY: 8,
+		blockElement: '.vids'
+	});
+});
+           </script>
+ </head>
+<body>
+<h1> Too Good!!! </h1>
+
+    <div id='container'>
+       
+{{ for video in videos: }}
+<div id='vids' class='vids' style="width:800px; margin:0 auto;">
+<h2>Title: {{=video.title}}</h2><br/>
+Description: {{=video.description[:100]}}<br/>
+Total Likes Count: {{=video.total_likes}}<br/>
+Source: {{=video.sourceOfVideo}}<br/>
+<img src="http://img.youtube.com/vi/{{=video.vid}}/0.jpg" alt="Mountain View" style="width:100px;height:100px">
+
+<iframe width="100%" src="//www.youtube.com/embed/{{=video.vid}}" frameborder="0" allowfullscreen></iframe>
+<br/>
+<hr/>
+<br/>
+</div>
+
+{{pass}}
+</div>
+    </body>

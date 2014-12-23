@@ -1,0 +1,50 @@
+<head>
+    <!-- <script src="https://raw.githubusercontent.com/paulirish/infinite-scroll/master/jquery.infinitescroll.min.js" type="text/javascript" charset="utf-8"/> -->
+    <script type="text/javascript">
+    console.log('111');
+    </script>
+    <script type="text/javascript">
+    console.log('112');
+    </script>
+    <script src="static/jquery.js" type="text/javascript" charset="utf-8"></script>
+     <script type="text/javascript">
+    console.log('113');
+    </script>
+   <script src="static/masonry.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript">
+        console.log('333');
+        jQuery.noConflict();
+       $( document ).ready(function() {
+           console.log('222')
+        var container = document.querySelector('#container');
+        var msnry = new Masonry( container, {
+           options
+          columnWidth: 200,
+          itemSelector: '.vids'
+        });
+        });
+           </script>
+ </head>
+<body>
+<h1> Too Good!!! </h1>
+<div style="width:800px; margin:0 auto;">
+<p> You can do the following over here: </p>
+<h1><a href="{{=URL(r=request, f='create')}}">Showing Latest Funny Videos (Sorted by Rating Desc)</a></h1>
+</div> 
+    <div id='container'>
+       
+{{ for video in videos: }}
+<div id='vid' class='vids' style="width:800px; margin:0 auto;">
+<h2>Title: {{=video.title}}</h2><br/>
+Description: {{=video.description[:100]}}<br/>
+Total Likes Count: {{=video.total_likes}}<br/>
+Source: {{=video.sourceOfVideo}}<br/>
+<iframe width="560" height="315" src="//www.youtube.com/embed/{{=video.vid}}" frameborder="0" allowfullscreen></iframe>
+<br/>
+<hr/>
+<br/>
+</div>
+
+{{pass}}
+</div>
+    </body>
